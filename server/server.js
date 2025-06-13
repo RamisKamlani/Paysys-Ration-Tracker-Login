@@ -14,7 +14,7 @@ const app = express();
 // ✅ Allow your frontend URLs
 const allowedOrigins = [
   'http://localhost:5173', // local dev
-  'https://your-vercel-app.vercel.app' // replace with your deployed frontend domain
+  'https://paysys-ration-tracker-login.vercel.app' // replace with your deployed frontend domain
 ];
 
 app.use(cors({
@@ -105,6 +105,15 @@ app.get('/api/secure-data', (req, res) => {
   if (!role) return res.status(401).send('Unauthorized');
   res.json({ message: `Hello ${role}`, role });
 });
+
+// ✅ Serve React static files
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// ✅ Fallback: serve index.html for any other route (for React Router)
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
