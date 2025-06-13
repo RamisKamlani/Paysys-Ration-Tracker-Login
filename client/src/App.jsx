@@ -7,6 +7,8 @@ import AdminPanel from './AdminPanel'; // ✅ Import AdminPanel
 
 const CLIENT_ID = '107243168159-fdc4iftnp66vieumrbjs6krc8ba9e45j.apps.googleusercontent.com';
 const ADMIN_EMAIL = 'ramiskamlani04@gmail.com'; // ✅ Change to real admin email
+const SERVER_URL = 'https://paysys-ration-tracker-login-production.up.railway.app';
+
 
 export default function App() {
   const [name, setName] = useState('');
@@ -73,7 +75,7 @@ export default function App() {
       if (!unsynced.length) return alert('All data already synced!');
       if (!window.confirm('Transfer data now?')) return;
 
-      const res = await fetch('http://localhost:5000/api/locations/bulk', {
+      const response = await fetch(`${SERVER_URL}/api/locations/bulk`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

@@ -10,7 +10,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const SERVER_URL = 'http://localhost:5000';
+const SERVER_URL = 'https://paysys-ration-tracker-login-production.up.railway.app';
 
 export default function MapViewer({ userEmail, isAdmin = false }) {
   const [locations, setLocations] = useState([]);
