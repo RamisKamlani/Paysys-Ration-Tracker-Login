@@ -66,34 +66,38 @@ export default function App() {
     );
   };
 
-  const syncToServer = async () => {
-    if (!user) return alert('Please log in with Google first.');
+const syncToServer = async () => {
+  if (!user) return alert('Please log in with Google first.');
 
-    try {
-      const all = await db.locations.toArray();
-      const unsynced = all.filter((l) => !l.synced);
-      if (!unsynced.length) return alert('All data already synced!');
-      if (!window.confirm('Transfer data now?')) return;
+  try {
+    const all = await db.locations.toArray();
+    const unsynced = all.filter((l) => !l.synced);
+    if (!unsynced.length) return alert('All data already synced!');
+    if (!window.confirm('Transfer data now?')) return;
 
-      const response = await fetch(`${SERVER_URL}/api/locations/bulk`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, locations: unsynced }),
-      });
+    const response = await fetch(`${SERVER_URL}/api/locations/bulk`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, locations: unsynced }),
+    });
 
-      if (!res.ok) throw new Error('Server error');
-
-      for (let rec of unsynced) {
-        await db.locations.update(rec.id, { synced: true });
-      }
-      setLocations(await db.locations.toArray());
-      alert(`${unsynced.length} location(s) synced!`);
-    } catch (err) {
-      console.error(err);
-      alert('Sync failed.');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Server error');
     }
-  };
+
+    for (let rec of unsynced) {
+      await db.locations.update(rec.id, { synced: true });
+    }
+    setLocations(await db.locations.toArray());
+    alert(`${unsynced.length} location(s) synced!`);
+  } catch (err) {
+    console.error(err);
+    alert('Sync failed.');
+  }
+};
+
 
   const deleteLocation = async (id) => {
     const confirmed = window.confirm('Are you sure you want to delete this location from the local device?');
