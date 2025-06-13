@@ -32,6 +32,11 @@ app.use(cookieParser());
 
 let LOCATIONS = []; // In-memory store for demo. Replace with DB in production
 
+// ✅ Root route to avoid "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send('✅ Paysys Ration Tracker Backend is running');
+});
+
 // ✅ Google Auth verification
 app.post('/auth/google', async (req, res) => {
   const { idToken } = req.body;
@@ -101,4 +106,6 @@ app.get('/api/secure-data', (req, res) => {
   res.json({ message: `Hello ${role}`, role });
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
