@@ -108,6 +108,12 @@ app.get('/api/secure-data', (req, res) => {
   res.json({ message: `Hello ${role}`, role });
 });
 
+// ✅ Get all unique user emails
+app.get('/api/users', (req, res) => {
+  const uniqueEmails = [...new Set(LOCATIONS.map(loc => loc.email))];
+  res.json(uniqueEmails);
+});
+
 // ✅ Serve React static files
 app.use(express.static(path.join(__dirname, 'dist')));
 
@@ -115,6 +121,7 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
+
 
 
 app.listen(PORT, '0.0.0.0', () => {
