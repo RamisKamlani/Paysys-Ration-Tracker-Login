@@ -22,12 +22,31 @@ export default function AdminPanel() {
 
   const fetchLocations = async () => {
     try {
-      const url = selected ? `${SERVER_URL}/api/locations?email=${encodeURIComponent(selected)}` : `${SERVER_URL}/api/locations`;
+      const url = selected
+        ? `${SERVER_URL}/api/locations?email=${encodeURIComponent(selected)}`
+        : `${SERVER_URL}/api/locations`;
       const res = await fetch(url);
       const data = await res.json();
       setLocations(data);
     } catch (err) {
       console.error('Failed to load locations:', err);
+    }
+  };
+
+  const deleteFromServer = async (index) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this location from the server?');
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`${SERVER_URL}/api/locations/${index}?email=${encodeURIComponent(selected)}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) throw new Error('Delete failed');
+      await fetchLocations(); // Refresh the list
+    } catch (err) {
+      console.error('Error deleting location:', err);
+      alert('Failed to delete location.');
     }
   };
 
@@ -50,7 +69,13 @@ export default function AdminPanel() {
           <li key={idx}>
             <strong>{loc.name}</strong><br />
             Lat: {loc.lat}, Lng: {loc.lng}<br />
-            {loc.email}
+            {loc.email}<br />
+            <button
+              onClick={() => deleteFromServer(idx)}
+              style={{ marginTop: 6, backgroundColor: 'crimson', color: 'white' }}
+            >
+              🗑️ Delete
+            </button>
           </li>
         ))}
       </ul>
