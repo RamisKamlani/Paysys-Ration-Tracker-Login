@@ -4,8 +4,8 @@ export default function AboutModal({ show, onClose }) {
   if (!show) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-box">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         <h2>📘 How to Use</h2>
         <ul>
           <li>🔐 Log in with your Google account.</li>
@@ -15,7 +15,7 @@ export default function AboutModal({ show, onClose }) {
           <li>🗺️ Use "Show Map" to view synced locations.</li>
           <li>🛡 Only Admins can filter and view data from all users.</li>
         </ul>
-        <button onClick={onClose} className="close-btn">Close</button>
+        <button className="close-btn" onClick={onClose}>Close</button>
       </div>
     </div>
   );
