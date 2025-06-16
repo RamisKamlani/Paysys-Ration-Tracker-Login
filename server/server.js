@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { OAuth2Client } = require('google-auth-library');
-const path = require('path'); // ✅ Needed if serving frontend
+const path = require('path');
+
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -12,9 +13,10 @@ const PORT = process.env.PORT || 5000;
 const client = new OAuth2Client(CLIENT_ID);
 const app = express();
 
+// ✅ Allow your frontend URLs
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://your-vercel-app.vercel.app',
+  'http://localhost:5173', // local dev
+  'https://paysys-ration-tracker-login.vercel.app' // replace with your deployed frontend domain
 ];
 
 app.use(cors({
@@ -30,9 +32,14 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-let LOCATIONS = []; // In-memory data store
+let LOCATIONS = []; // In-memory store for demo. Replace with DB in production
 
-// ✅ Google OAuth Login
+// ✅ Root route to avoid "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send('✅ Paysys Ration Tracker Backend is running');
+});
+
+// ✅ Google Auth verification
 app.post('/auth/google', async (req, res) => {
   const { idToken } = req.body;
   try {
@@ -51,7 +58,7 @@ app.post('/auth/google', async (req, res) => {
   }
 });
 
-// ✅ Save multiple locations from frontend
+// ✅ Save bulk locations from user
 app.post('/api/locations/bulk', (req, res) => {
   const { email, locations } = req.body;
 
@@ -65,17 +72,17 @@ app.post('/api/locations/bulk', (req, res) => {
   res.status(200).json({ message: 'Locations saved' });
 });
 
-// ✅ Get locations (admin = all, user = by email)
+// ✅ Get all or filtered locations
 app.get('/api/locations', (req, res) => {
   const { email } = req.query;
   console.log(`[GET] Fetching locations for ${email || 'admin (all)'}`);
   if (email) {
     return res.json(LOCATIONS.filter(loc => loc.email === email));
   }
-  res.json(LOCATIONS);
+  res.json(LOCATIONS); // Admin sees all
 });
 
-// ✅ Delete location by index (admin or owner)
+// ✅ Delete a location (by index)
 app.delete('/api/locations/:index', (req, res) => {
   const { index } = req.params;
   const { email } = req.query;
@@ -85,6 +92,7 @@ app.delete('/api/locations/:index', (req, res) => {
     return res.status(400).json({ error: 'Invalid index' });
   }
 
+  // ✅ Allow delete if user is owner OR admin
   if (email && LOCATIONS[idx].email !== email && email !== ADMIN_EMAIL) {
     return res.status(403).json({ error: 'Forbidden' });
   }
@@ -93,25 +101,22 @@ app.delete('/api/locations/:index', (req, res) => {
   res.json({ message: 'Location deleted' });
 });
 
-// ✅ Get all unique user emails
-app.get('/api/users', (req, res) => {
-  const uniqueEmails = [...new Set(LOCATIONS.map(loc => loc.email))];
-  res.json(uniqueEmails);
-});
-
-// ✅ Optional secure route
+// ✅ Secure route test (optional)
 app.get('/api/secure-data', (req, res) => {
   const role = req.cookies.session_role;
   if (!role) return res.status(401).send('Unauthorized');
   res.json({ message: `Hello ${role}`, role });
 });
 
-// ✅ Serve frontend if needed (for production fullstack deployment)
+// ✅ Serve React static files
 app.use(express.static(path.join(__dirname, 'dist')));
-app.get('*', (req, res) => {
+
+// ✅ Fallback: serve index.html for any other route (for React Router)
+app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
