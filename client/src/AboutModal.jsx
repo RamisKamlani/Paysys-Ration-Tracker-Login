@@ -13,7 +13,7 @@ export default function AboutModal({ show, onClose }) {
           <li>📍 Tap "Capture Location" to save the GPS coordinates.</li>
           <li>🔄 Use "Transfer Data" to sync offline data to the server.</li>
           <li>🗺️ Use "Show Map" to view synced locations.</li>
-          <li>🛡️ Only Admins can filter and view data from all users.</li>
+          <li>🛡️ Admins can filter and view data through the admin panel at the bottom.</li>
         </ul>
         <button onClick={onClose} className="close-btn">Close</button>
       </div>

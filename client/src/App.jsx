@@ -4,7 +4,7 @@ import { db } from './db';
 import { GoogleOAuthProvider, GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import AdminPanel from './AdminPanel';
-import AboutModal from './AboutModal'; // ✅ Import modal
+import AboutModal from './AboutModal';
 
 const CLIENT_ID = '107243168159-fdc4iftnp66vieumrbjs6krc8ba9e45j.apps.googleusercontent.com';
 const ADMIN_EMAIL = 'ramiskamlani04@gmail.com';
@@ -14,8 +14,10 @@ export default function App() {
   const [name, setName] = useState('');
   const [locations, setLocations] = useState([]);
   const [showMap, setShowMap] = useState(false);
+  const [fullScreenMap, setFullScreenMap] = useState(false);
   const [user, setUser] = useState(null);
-  const [showAbout, setShowAbout] = useState(false); // ✅ About popup state
+  const [showAbout, setShowAbout] = useState(false);
+  const [showCaptured, setShowCaptured] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -170,41 +172,64 @@ export default function App() {
 
       {/* Section 3: Captured Data */}
       <section className="card">
-        <div className="card-header">📋 Captured Data</div>
-        {locations.length === 0 ? (
-          <p>No data captured yet.</p>
-        ) : (
-          <ul className="location-list">
-            {locations.map((loc) => (
-              <li key={loc.id}>
-                <strong>{loc.name}</strong><br />
-                Lat: {loc.lat?.toFixed(4) ?? 'N/A'}, Lng: {loc.lng?.toFixed(4) ?? 'N/A'}<br />
-                {loc.synced ? '✅ Synced' : '❌ Not Synced'}
-                <br />
-                <button
-                  style={{ marginTop: 6, backgroundColor: 'crimson' }}
-                  onClick={() => deleteLocation(loc.id)}
-                >
-                  🗑️ Delete
-                </button>
-              </li>
-            ))}
-          </ul>
+        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
+          📋 Captured Data
+          <button
+            style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}
+            onClick={() => setShowCaptured(prev => !prev)}
+            aria-label="Toggle Captured List"
+          >
+            {showCaptured ? '➖' : '➕'}
+          </button>
+        </div>
+        {showCaptured && (
+          locations.length === 0 ? (
+            <p>No data captured yet.</p>
+          ) : (
+            <ul className="location-list">
+              {locations.map((loc) => (
+                <li key={loc.id}>
+                  <strong>{loc.name}</strong><br />
+                  Lat: {loc.lat?.toFixed(4) ?? 'N/A'}, Lng: {loc.lng?.toFixed(4) ?? 'N/A'}<br />
+                  {loc.synced ? '✅ Synced' : '❌ Not Synced'}
+                  <br />
+                  <button
+                    style={{ marginTop: 6, backgroundColor: 'crimson' }}
+                    onClick={() => deleteLocation(loc.id)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )
         )}
       </section>
 
       {/* Section 4: Map */}
       <section className="card">
         <div className="card-header">🗺️ View Synced Locations</div>
-        <button onClick={() => setShowMap(!showMap)}>
-          {showMap ? 'Hide Map' : 'Show Map'}
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => setShowMap(!showMap)}>
+            {showMap ? 'Hide Map' : 'Show Map'}
+          </button>
+          <button onClick={() => setFullScreenMap(true)}>🖥 Full Screen</button>
+        </div>
         {showMap && (
           <div className="map-box">
             <MapViewer userEmail={user?.email} isAdmin={isAdmin} />
           </div>
         )}
       </section>
+
+      {fullScreenMap && (
+        <div className="fullscreen-map-overlay">
+          <button onClick={() => setFullScreenMap(false)} className="fullscreen-close-btn">❌ Close</button>
+          <div className="fullscreen-map-box">
+            <MapViewer userEmail={user?.email} isAdmin={isAdmin} />
+          </div>
+        </div>
+      )}
 
       {/* Section 5: Admin Panel */}
       {isAdmin && <AdminPanel />}
