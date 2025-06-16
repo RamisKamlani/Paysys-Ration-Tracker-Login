@@ -3,18 +3,19 @@ import { useEffect, useState } from 'react';
 import { db } from './db';
 import { GoogleOAuthProvider, GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import AdminPanel from './AdminPanel'; // ✅ Import AdminPanel
+import AdminPanel from './AdminPanel';
+import AboutModal from './AboutModal'; // ✅ Import modal
 
 const CLIENT_ID = '107243168159-fdc4iftnp66vieumrbjs6krc8ba9e45j.apps.googleusercontent.com';
-const ADMIN_EMAIL = 'ramiskamlani04@gmail.com'; // ✅ Change to real admin email
+const ADMIN_EMAIL = 'ramiskamlani04@gmail.com';
 const SERVER_URL = 'https://paysys-ration-tracker-login-production.up.railway.app';
-
 
 export default function App() {
   const [name, setName] = useState('');
   const [locations, setLocations] = useState([]);
   const [showMap, setShowMap] = useState(false);
   const [user, setUser] = useState(null);
+  const [showAbout, setShowAbout] = useState(false); // ✅ About popup state
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -66,38 +67,37 @@ export default function App() {
     );
   };
 
-const syncToServer = async () => {
-  if (!user) return alert('Please log in with Google first.');
+  const syncToServer = async () => {
+    if (!user) return alert('Please log in with Google first.');
 
-  try {
-    const all = await db.locations.toArray();
-    const unsynced = all.filter((l) => !l.synced);
-    if (!unsynced.length) return alert('All data already synced!');
-    if (!window.confirm('Transfer data now?')) return;
+    try {
+      const all = await db.locations.toArray();
+      const unsynced = all.filter((l) => !l.synced);
+      if (!unsynced.length) return alert('All data already synced!');
+      if (!window.confirm('Transfer data now?')) return;
 
-    const response = await fetch(`${SERVER_URL}/api/locations/bulk`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: user.email, locations: unsynced }),
-    });
+      const response = await fetch(`${SERVER_URL}/api/locations/bulk`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, locations: unsynced }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Server error');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Server error');
+      }
+
+      for (let rec of unsynced) {
+        await db.locations.update(rec.id, { synced: true });
+      }
+      setLocations(await db.locations.toArray());
+      alert(`${unsynced.length} location(s) synced!`);
+    } catch (err) {
+      console.error(err);
+      alert('Sync failed.');
     }
-
-    for (let rec of unsynced) {
-      await db.locations.update(rec.id, { synced: true });
-    }
-    setLocations(await db.locations.toArray());
-    alert(`${unsynced.length} location(s) synced!`);
-  } catch (err) {
-    console.error(err);
-    alert('Sync failed.');
-  }
-};
-
+  };
 
   const deleteLocation = async (id) => {
     const confirmed = window.confirm('Are you sure you want to delete this location from the local device?');
@@ -122,6 +122,9 @@ const syncToServer = async () => {
 
   return (
     <div className="container">
+      <div style={{ position: 'absolute', top: 10, right: 10 }}>
+        <button onClick={() => setShowAbout(true)}>ℹ️ About</button>
+      </div>
       <img src="/paysys.jpg" alt="Paysys Labs Logo" className="top-logo" />
       <h1 className="main-title">📍 Ration Location Tracker - Paysys</h1>
 
@@ -205,6 +208,9 @@ const syncToServer = async () => {
 
       {/* Section 5: Admin Panel */}
       {isAdmin && <AdminPanel />}
+
+      {/* About Popup */}
+      <AboutModal show={showAbout} onClose={() => setShowAbout(false)} />
     </div>
   );
 }

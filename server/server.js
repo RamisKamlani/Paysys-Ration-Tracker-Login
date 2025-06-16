@@ -108,7 +108,7 @@ app.get('/api/secure-data', (req, res) => {
   res.json({ message: `Hello ${role}`, role });
 });
 
-// ✅ Get all unique user emails
+// ✅ Get all unique user emails  
 app.get('/api/users', (req, res) => {
   const uniqueEmails = [...new Set(LOCATIONS.map(loc => loc.email))];
   res.json(uniqueEmails);
